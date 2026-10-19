@@ -489,6 +489,19 @@ dialog pre{margin:0;font-family:var(--font-mono);font-size:.84rem;white-space:pr
 #jarStage.lit .jstar.new{animation:starin .4s ease both,sglow 2.4s ease-in-out .4s infinite}
 @keyframes sglow{0%,100%{filter:drop-shadow(0 0 1px #49334F) drop-shadow(0 0 5px rgba(255,236,140,.8))}50%{filter:drop-shadow(0 0 1px #49334F) drop-shadow(0 0 13px rgba(255,236,140,1))}}
 @media (prefers-reduced-motion:reduce){#jarStage.lit .jar-halo,#jarStage.lit .jar-aura{animation:none !important}}
+
+/* ===== FLOATING EASTER EGG ===== */
+.egg{position:fixed;left:0;top:0;width:58px;height:70px;z-index:1000;padding:0;border:0;background:none;
+  will-change:transform;filter:drop-shadow(0 8px 8px rgba(73,51,79,.22))}
+.egg .wob{display:block;width:100%;height:100%;animation:eggwob 3.2s ease-in-out infinite;transform-origin:50% 90%}
+.egg svg{display:block;width:100%;height:100%;overflow:visible}
+.egg:hover .wob{animation-duration:.6s}
+@keyframes eggwob{0%,100%{transform:rotate(-7deg)}50%{transform:rotate(7deg)}}
+.egg .tw{animation:twinkle 2.4s ease-in-out infinite;transform-box:fill-box;transform-origin:center}
+.hintnote{background:var(--butter);border-radius:4px 4px 18px 4px;padding:30px 22px 22px;font-family:var(--font-hand);
+  font-size:1.8rem;line-height:1.2;transform:rotate(-1.5deg);box-shadow:4px 8px 14px rgba(73,51,79,.2);position:relative;text-align:center}
+.hintnote::before{content:"";position:absolute;left:50%;top:-10px;width:70px;height:22px;margin-left:-35px;background:rgba(255,255,255,.65);border:1px solid rgba(73,51,79,.12)}
+.hintnote small{display:block;font-family:var(--font-mono);font-size:.7rem;letter-spacing:.08em;opacity:.6;margin-top:12px}
 </style>
 </head>
 
@@ -988,6 +1001,20 @@ dialog pre{margin:0;font-family:var(--font-mono);font-size:.84rem;white-space:pr
   </div>
 </footer>
 
+<!-- =========================================================
+     FLOATING EASTER EGG (outside <main>, so Dreamland's inert doesn't touch it)
+     ========================================================= -->
+<button class="egg" id="egg" type="button" aria-label="A little egg is floating around. Click it to open a secret note.">
+  <span class="wob">
+    <svg viewBox="0 0 58 70" aria-hidden="true">
+      <path d="M29 4C14 4 5 28 5 42C5 58 16 67 29 67C42 67 53 58 53 42C53 28 44 4 29 4Z" fill="#FFF3C4" stroke="#49334F" stroke-width="3" stroke-linejoin="round"/>
+      <path d="M7 40L16 33L24 41L33 32L42 41L51 33" fill="none" stroke="#49334F" stroke-width="2.6" stroke-linejoin="round" stroke-linecap="round"/>
+      <circle cx="17" cy="52" r="4" fill="#FFBEDC"/><circle cx="36" cy="55" r="3.2" fill="#D9C2FF"/><circle cx="26" cy="20" r="3" fill="#CFE8FF"/>
+      <ellipse cx="19" cy="22" rx="5" ry="9" fill="#fff" opacity=".6" transform="rotate(18 19 22)"/>
+      <path class="tw" d="M50 6l2 5 5 .6-4 3.4 1.2 5-4.2-2.6-4.2 2.6 1.2-5-4-3.4 5-.6Z" fill="#FFBEDC" stroke="#49334F" stroke-width="1.6" stroke-linejoin="round"/>
+    </svg>
+  </span>
+</button>
 
 <!-- =========================================================
      SLEEP POP-UP (appears when Pip falls asleep)
@@ -1510,6 +1537,48 @@ $('#battery').addEventListener('click',function(){
   pv();
 })();
 
+/* ---------- FLOATING EASTER EGG (hint note) ---------- */
+(function(){
+  var egg=$('#egg'); if(!egg) return;
+  var W=0,H=0,EW=58,EH=70,x=0,y=0,tx=0,ty=0,last=0,SPEED=38;
+  function size(){ W=window.innerWidth; H=window.innerHeight; }
+  function target(){ tx=rand(8,Math.max(9,W-EW-8)); ty=rand(80,Math.max(81,H-EH-8)); }
+  function put(){ egg.style.transform='translate3d('+x.toFixed(1)+'px,'+y.toFixed(1)+'px,0)'; }
+  size(); x=rand(20,Math.max(21,W-EW-20)); y=rand(120,Math.max(121,H-EH-20)); target(); put();
+  window.addEventListener('resize',function(){ size(); x=Math.min(x,W-EW-8); y=Math.min(y,H-EH-8); target(); put(); });
+
+  if(!reduce){
+    (function loop(ts){
+      if(!last) last=ts; var dt=Math.min(.05,(ts-last)/1000); last=ts;
+      var dx=tx-x, dy=ty-y, d=Math.sqrt(dx*dx+dy*dy);
+      if(d<8){ target(); }
+      else{
+        x+=dx/d*SPEED*dt; y+=dy/d*SPEED*dt;
+        put();
+      }
+      requestAnimationFrame(loop);
+    })(0);
+  } else {
+    x=W-EW-16; y=H-EH-16; put();   /* reduced motion: parks in the corner */
+  }
+
+  var hints=[
+    'psst... poke Pip 7 times. <b>gently.</b>',
+    'secret: tap Pip 7 times and something sleepy happens.',
+    'Pip is ticklish. 7 pokes. that is all i can say.'
+  ];
+  egg.addEventListener('click',function(){
+    openDlg('SECRET_NOTE.EXE',
+      '<div class="hintnote">'+pick(hints)+'<small>(hint: Pip is in the hero section at the top. scroll up!)</small></div>'+
+      '<div style="text-align:center;margin-top:18px"><button class="btn sm" id="eggGo" type="button">TAKE ME TO PIP ➜</button></div>');
+    var go=$('#eggGo');
+    if(go) go.addEventListener('click',function(){
+      if(dlg.close) dlg.close();
+      var top=document.getElementById('top'); if(top) top.scrollIntoView({behavior:reduce?'auto':'smooth'});
+    });
+    target();   /* egg scurries off to a new spot after being found */
+  });
+})();
 
 /* ---------- PIP LOOKS AT YOUR CURSOR ---------- */
 (function(){
