@@ -1,1 +1,4 @@
-draft-2 for the baby website lwk looks creepy imma change it up
+# PIP DREAM LAB ☁️🧸
+
+A little corner of the internet filled with pastel aesthetics, playful interactions, and tiny digital surprises.
+
